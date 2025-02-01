@@ -227,3 +227,5 @@ blockchain/solidity-contracts/docs/
 
 # Dotenv file
 blockchain/solidity-contracts/.env
+
+.DS_Store

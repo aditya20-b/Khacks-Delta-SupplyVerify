@@ -211,3 +211,19 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 .next
+
+# Compiler files
+./blockchain/solidity-contracts/node_modules/
+blockchain/solidity-contracts/cache/
+blockchain/solidity-contracts/out/
+
+# Ignores development broadcast logs
+!blockchain/solidity-contracts/broadcast
+blockchain/solidity-contracts/broadcast/*/31337/
+blockchain/solidity-contracts/broadcast/**/dry-run/
+
+# Docs
+blockchain/solidity-contracts/docs/
+
+# Dotenv file
+blockchain/solidity-contracts/.env

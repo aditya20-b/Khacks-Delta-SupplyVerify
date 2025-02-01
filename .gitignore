@@ -211,3 +211,5 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 .next
+.DS_Store 
+# store file on Mac OS

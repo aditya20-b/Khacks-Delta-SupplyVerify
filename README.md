@@ -1,4 +1,4 @@
-# TemeKnow  s - Know your Product
+# TemeKnows - Know your Product
 
 Supply Verify is a comprehensive supply chain verification platform that leverages blockchain technology, IoT devices, and smart contracts to provide end-to-end tracking of a product's lifecycle—from manufacturing to the end consumer. This project was developed during a hackathon to address issues of product authenticity and integrity in modern supply chains.
 

@@ -5,6 +5,7 @@ import { SKUPreview } from "./components/SKUPreview";
 import { SchemaBlock, SchemaStorage, SchemaMap } from "./types/sku";
 import { SchemaManager } from "./components/SchemaManager";
 import Header from "components/Header";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 // Navigation menu items
 const MENU_ITEMS = [
@@ -641,6 +642,23 @@ export default function NFCReader() {
                 </div>
               </section>
             )}
+
+            <section>
+              <Scanner
+                onScan={(result) => console.log(result)}
+                styles={{
+                  video: { maxHeight: "300px" },
+                  container: {
+                    width: "fit-content",
+                    margin: "auto",
+                    borderRadius: "1rem",
+                    overflow: "hidden",
+                    height: "300px",
+                  },
+                }}
+              />
+              ;
+            </section>
           </div>
         );
     }
@@ -652,7 +670,7 @@ export default function NFCReader() {
       <Header />
 
       {/* Main Content */}
-      <main className="flex-1 max-w-lg mx-auto w-full">
+      <main className="flex-1 max-w-lg mx-auto w-full mb-24">
         {error && (
           <div className="flex items-center gap-4 text-red-500 py-8 text-xl">
             <div className="w-[5px] h-[5px] rounded-full bg-red-500"></div>

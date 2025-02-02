@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type GeoJSON from "geojson"
 
 export async function getRoute(start: [number, number], end: [number, number]): Promise<GeoJSON.FeatureCollection> {

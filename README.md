@@ -80,68 +80,76 @@ Supply Verify comprises multiple interrelated components:
 Below is an overview of the project structure:
 
 ```plaintext
-[ 480]  .
-├── [  64]  backend
-├── [ 192]  blockchain
-│   ├── [ 352]  forge-contracts
-│   │   ├── [  96]  script       - Deployment and interaction scripts for Forge-based smart contracts.
-│   │   ├── [  96]  src          - Source code for smart contracts.
-│   │   └── [  96]  test         - Test suites for smart contracts.
-│   ├── [ 256]  hyperledger
-│   │   ├── [ 288]  asset-transfer-basic
-│   │   │   ├── [ 416]  application-gateway-typescript - Gateway applications to interact with the chaincode.
-│   │   │   ├── [ 544]  chaincode-external           - External chaincode integrations.
-│   │   │   ├── [ 416]  chaincode-typescript           - Chaincode implementation in TypeScript.
-│   │   │   └── [ 640]  rest-api-typescript            - REST API for chaincode interactions.
-│   │   ├── [  96]  builders
-│   │   │   └── [  96]  ccaas                      - Builders for Chaincode as a Service (CCaaS).
-│   │   ├── [ 256]  sol-contract-port
-│   │   │   └── [ 256]  typescript                 - TypeScript implementation for Solidity contract porting.
-│   │   └── [ 768]  test-network
-│   │       ├── [ 352]  addOrg3                  - Scripts/configurations for adding an organization.
-│   │       ├── [  96]  bft-config               - Byzantine Fault Tolerant (BFT) configuration.
-│   │       ├── [ 512]  channel-artifacts        - Artifacts for channel creation.
-│   │       ├── [ 256]  compose                  - Docker Compose files for network deployment.
-│   │       ├── [  96]  configtx                 - Network configuration transactions.
-│   │       ├── [ 320]  organizations          - Organization-specific configurations.
-│   │       ├── [  96]  packagedChaincode      - Pre-packaged chaincode ready for deployment.
-│   │       ├── [ 224]  prometheus-grafana       - Monitoring with Prometheus and Grafana.
-│   │       ├── [ 576]  scripts                  - Utility scripts for network management.
-│   │       └── [  96]  system-genesis-block     - Genesis block for the system channel.
-│   └── [  64]  solidity-contracts             - Additional Solidity smart contracts.
-├── [ 320]  contract-poc
-│   └── [ 224]  src
-│       ├── [  96]  abi                      - ABI definitions for smart contract interactions.
-│       ├── [ 192]  app                      - Proof-of-concept application demonstrating contract usage.
-│       ├── [ 256]  components               - Reusable UI components.
-│       └── [  96]  utils                    - Utility functions and helpers.
-├── [ 320]  hardware
-│   ├── [ 128]  mbu6050                      - Code interfacing with the MBU6050 sensor.
-│   ├── [ 128]  readUID_data_copy_20250201162707 - Scripts/data for reading UIDs from RFID/NFC scanners.
-│   ├── [  96]  serial_                      - Serial communication implementations.
-│   ├── [  96]  serial_new                   - Updated serial communication modules.
-│   └── [  96]  writing                      - Code for writing data to hardware components.
-├── [ 608]  manufacturer-app
-│   ├── [ 160]  public
-│   │   └── [  96]  assets                   - Static assets (images, fonts, etc.) for the app.
-│   └── [ 288]  src
-│       ├── [ 224]  components               - Frontend components for the manufacturer app.
-│       ├── [ 128]  types                    - Type definitions and interfaces.
-│       └── [  96]  utils                    - Utility functions and shared services.
-└── [ 448]  manufacturer-website
-    ├── [ 384]  app
-    │   ├── [  96]  admin                   - Administrative panel components.
-    │   ├── [ 448]  components              - Core website components.
-    │   ├── [ 224]  dashboard
-    │   │   ├── [  96]  open-food-facts      - Integration with Open Food Facts API.
-    │   │   ├── [  96]  problematic-shipments - Module for tracking problematic shipments.
-    │   │   └── [  96]  product-tracking     - Real-time product tracking dashboard.
-    │   ├── [ 128]  onboarding              - Onboarding views for new users.
-    │   ├── [  96]  pending-approval        - Workflows for pending approvals.
-    │   └── [  96]  types                   - Type definitions for the website.
-    ├── [  96]  data                        - Static/sample data files.
-    ├── [  96]  docs                        - Documentation specific to the website.
-    └── [ 256]  public                      - Public assets served by the web server.
+.
+├── backend                                - Backend services for APIs and data processing.
+├── blockchain                             - Blockchain-related modules and smart contract development.
+│   ├── forge-contracts                    - Forge-based smart contracts and scripts.
+│   │   ├── script                         - Deployment and interaction scripts for Forge-based smart contracts.
+│   │   ├── src                            - Source code for smart contracts.
+│   │   └── test                           - Test suites for smart contracts.
+│   ├── hyperledger                        - Hyperledger Fabric configurations, chaincode, and network setup.
+│   │   ├── asset-transfer-basic           - Basic asset transfer chaincode and applications.
+│   │   │   ├── application-gateway-typescript - Gateway applications to interact with the chaincode.
+│   │   │   ├── chaincode-external         - External chaincode integrations.
+│   │   │   ├── chaincode-typescript       - Chaincode implementation in TypeScript.
+│   │   │   └── rest-api-typescript        - REST API for chaincode interactions.
+│   │   ├── builders
+│   │   │   └── ccaas                      - Builders for Chaincode as a Service (CCaaS).
+│   │   ├── sol-contract-port
+│   │   │   └── typescript                 - TypeScript implementation for Solidity contract porting.
+│   │   └── test-network                   - Test network configuration for Hyperledger Fabric.
+│   │       ├── addOrg3                    - Scripts/configurations for adding an organization.
+│   │       ├── bft-config                 - Byzantine Fault Tolerant (BFT) configuration.
+│   │       ├── channel-artifacts          - Artifacts for channel creation.
+│   │       ├── compose                    - Docker Compose files for network deployment.
+│   │       ├── configtx                   - Network configuration transactions.
+│   │       ├── organizations              - Organization-specific configurations.
+│   │       ├── packagedChaincode          - Pre-packaged chaincode ready for deployment.
+│   │       ├── prometheus-grafana         - Monitoring with Prometheus and Grafana.
+│   │       ├── scripts                    - Utility scripts for network management.
+│   │       └── system-genesis-block       - Genesis block for the system channel.
+│   └── solidity-contracts                 - Additional Solidity smart contracts.
+├── contract-poc                           - Proof-of-concept for smart contract applications.
+│   └── src
+│       ├── abi                            - ABI definitions for smart contract interactions.
+│       ├── app                            - Proof-of-concept application demonstrating contract usage.
+│       ├── components                     - Reusable UI components.
+│       └── utils                          - Utility functions and helpers.
+├── customer-app                           - Application for customer-facing features.
+│   ├── app
+│   │   ├── components                     - Frontend components for customer interactions.
+│   │   ├── types                          - Type definitions and interfaces.
+│   │   └── utils                          - Utility functions and helpers.
+│   ├── components
+│   │   └── ui                             - UI elements and reusable design components.
+│   └── public                             - Public static assets like images and icons.
+├── hardware                               - Hardware interfacing code for IoT and sensor data.
+│   ├── mbu6050                            - Code interfacing with the MBU6050 sensor.
+│   ├── readUID_data_copy_20250201162707   - Scripts/data for reading UIDs from RFID/NFC scanners.
+│   ├── serial_                            - Serial communication implementations.
+│   ├── serial_new                         - Updated serial communication modules.
+│   └── writing                            - Code for writing data to hardware components.
+├── manufacturer-app                       - Manufacturer-specific application for supply chain management.
+│   ├── public
+│   │   └── assets                         - Static assets (images, fonts, etc.) for the app.
+│   └── src
+│       ├── components                     - Frontend components for the manufacturer app.
+│       ├── types                          - Type definitions and interfaces.
+│       └── utils                          - Utility functions and shared services.
+└── manufacturer-website                   - Website for manufacturers with dashboards and admin panels.
+    ├── app
+    │   ├── admin                          - Administrative panel components.
+    │   ├── components                     - Core website components.
+    │   ├── dashboard                      - Dashboard for tracking products and shipments.
+    │   │   ├── open-food-facts            - Open Food Facts integration module.
+    │   │   ├── problematic-shipments      - Module for tracking problematic shipments.
+    │   │   └── product-tracking           - Product tracking and supply chain analytics.
+    │   ├── onboarding                     - Onboarding flow for new users or manufacturers.
+    │   ├── pending-approval               - Pending approval processes for new accounts or products.
+    │   └── types                          - Type definitions and data models.
+    ├── data                               - Sample data, configuration files, or data models.
+    ├── docs                               - Documentation related to the project.
+    └── public                             - Publicly accessible files for the website (static assets).
 ```
 
 ---

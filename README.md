@@ -80,7 +80,7 @@ Supply Verify comprises multiple interrelated components:
 Below is an overview of the project structure:
 
 ```plaintext
-.
+-
 ├── backend                                - Backend services for APIs and data processing.
 ├── blockchain                             - Blockchain-related modules and smart contract development.
 │   ├── forge-contracts                    - Forge-based smart contracts and scripts.

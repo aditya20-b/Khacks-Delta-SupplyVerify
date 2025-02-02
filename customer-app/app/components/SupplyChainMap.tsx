@@ -17,6 +17,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { LoadingSplash } from "./LoadingSplash"
+import { AnimatePresence } from "framer-motion"
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!
 
@@ -393,6 +395,7 @@ export default function SupplyChainMap() {
   const [selectedWaypoint, setSelectedWaypoint] = useState<PackageLocation | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isProductSheetOpen, setIsProductSheetOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -402,6 +405,9 @@ export default function SupplyChainMap() {
         ),
       )
       setRoutes(allRoutes)
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 2000)
     }
     fetchRoutes()
   }, [])
@@ -659,88 +665,93 @@ export default function SupplyChainMap() {
   }, [currentLocationIndex])
 
   return (
-    <div className="fixed inset-0 w-full h-full">
-      <Map
-        {...viewState}
-        onMove={(evt) => setViewState(evt.viewState)}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
-        mapboxAccessToken={mapboxgl.accessToken as string}
-        ref={mapRef as React.Ref<MapRef>}
-        style={{ width: "100%", height: "100%" }}
-        terrain={{ source: "mapbox-dem", exaggeration: 1.5 }}
-      >
-        <Source
-          id="mapbox-dem"
-          type="raster-dem"
-          url="mapbox://mapbox.mapbox-terrain-dem-v1"
-          tileSize={512}
-          maxzoom={14}
+    <>
+      <AnimatePresence>
+        {isLoading && <LoadingSplash />}
+      </AnimatePresence>
+      <div className={`fixed inset-0 w-full h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        <Map
+          {...viewState}
+          onMove={(evt) => setViewState(evt.viewState)}
+          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapboxAccessToken={mapboxgl.accessToken as string}
+          ref={mapRef as React.Ref<MapRef>}
+          style={{ width: "100%", height: "100%" }}
+          terrain={{ source: "mapbox-dem", exaggeration: 1.5 }}
+        >
+          <Source
+            id="mapbox-dem"
+            type="raster-dem"
+            url="mapbox://mapbox.mapbox-terrain-dem-v1"
+            tileSize={512}
+            maxzoom={14}
+          />
+          {renderMarkers()}
+          {renderPopup()}
+          {renderRoutes()}
+        </Map>
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center justify-center">
+          {isAnimating ? (
+            <div className="bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-white/10">
+              {getCurrentMovement()}
+            </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => {
+                  setSelectedWaypoint(packageLocations[currentLocationIndex])
+                  setIsSheetOpen(true)
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full border border-white/10 transition-all duration-200 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                <span className="text-xs text-nowrap">View Timeline</span>
+              </button>
+              <button
+                onClick={() => setIsProductSheetOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full border border-white/10 transition-all duration-200 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-nowrap">Product Details</span>
+              </button>
+            </div>
+          )}
+        </div>
+        <TimelineControl
+          locations={packageLocations}
+          currentTime={currentTime}
+          isPlaying={isAnimating}
+          onPlayPause={toggleAnimation}
+          onTimeChange={handleTimelineChange}
+          totalDuration={TOTAL_DURATION}
         />
-        {renderMarkers()}
-        {renderPopup()}
-        {renderRoutes()}
-      </Map>
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center justify-center">
-        {isAnimating ? (
-          <div className="bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-white/10">
-            {getCurrentMovement()}
-          </div>
-        ) : (
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => {
-                setSelectedWaypoint(packageLocations[currentLocationIndex])
-                setIsSheetOpen(true)
-              }}
-              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full border border-white/10 transition-all duration-200 flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              <span className="text-xs text-nowrap">View Timeline</span>
-            </button>
-            <button
-              onClick={() => setIsProductSheetOpen(true)}
-              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full border border-white/10 transition-all duration-200 flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-xs text-nowrap">Product Details</span>
-            </button>
-          </div>
-        )}
+        <WaypointSheet 
+          isOpen={isSheetOpen}
+          onClose={() => setIsSheetOpen(false)}
+          selectedLocation={selectedWaypoint}
+          allLocations={packageLocations}
+          onLocationSelect={(location) => {
+            setSelectedWaypoint(location)
+            setIsSheetOpen(false)
+            if (mapRef.current) {
+              mapRef.current.flyTo({
+                center: location.coordinates,
+                zoom: 10,
+                duration: 2000,
+              })
+            }
+          }}
+        />
+        <ProductSheet 
+          isOpen={isProductSheetOpen}
+          onClose={() => setIsProductSheetOpen(false)}
+        />
       </div>
-      <TimelineControl
-        locations={packageLocations}
-        currentTime={currentTime}
-        isPlaying={isAnimating}
-        onPlayPause={toggleAnimation}
-        onTimeChange={handleTimelineChange}
-        totalDuration={TOTAL_DURATION}
-      />
-      <WaypointSheet 
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        selectedLocation={selectedWaypoint}
-        allLocations={packageLocations}
-        onLocationSelect={(location) => {
-          setSelectedWaypoint(location)
-          setIsSheetOpen(false)
-          if (mapRef.current) {
-            mapRef.current.flyTo({
-              center: location.coordinates,
-              zoom: 10,
-              duration: 2000,
-            })
-          }
-        }}
-      />
-      <ProductSheet 
-        isOpen={isProductSheetOpen}
-        onClose={() => setIsProductSheetOpen(false)}
-      />
-    </div>
+    </>
   )
 }
 

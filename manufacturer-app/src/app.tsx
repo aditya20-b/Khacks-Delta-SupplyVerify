@@ -1,49 +1,53 @@
-import { useState, useEffect } from 'react';
-import { NFCRecord, NDEFReadingEvent } from './types/nfc';
-import { SKUBuilder } from './components/SKUBuilder';
-import { SKUPreview } from './components/SKUPreview';
-import { SchemaBlock, SchemaStorage, SchemaMap } from './types/sku';
-import { SchemaManager } from './components/SchemaManager';
+import { useState, useEffect } from "react";
+import { NFCRecord, NDEFReadingEvent } from "./types/nfc";
+import { SKUBuilder } from "./components/SKUBuilder";
+import { SKUPreview } from "./components/SKUPreview";
+import { SchemaBlock, SchemaStorage, SchemaMap } from "./types/sku";
+import { SchemaManager } from "./components/SchemaManager";
+import Header from "components/Header";
 
 // Navigation menu items
 const MENU_ITEMS = [
-  { id: 'tags', label: 'Tags', icon: '🏷️' },
-  { id: 'schemas', label: 'Schemas', icon: '📋' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: "tags", label: "Tags", icon: "🏷️" },
+  { id: "schemas", label: "Schemas", icon: "📋" },
+  { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
 export default function NFCReader() {
   const [nfcSupported, setNfcSupported] = useState(false);
   const [records, setRecords] = useState<NFCRecord[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   // @ts-expect-error
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [isWriting, setIsWriting] = useState(false);
   const [skuBlocks, setSKUBlocks] = useState<SchemaBlock[]>([]);
   // @ts-expect-error
-  const [nextSKU, setNextSKU] = useState('');
-  const [manualSKU, setManualSKU] = useState('');
+  const [nextSKU, setNextSKU] = useState("");
+  const [manualSKU, setManualSKU] = useState("");
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('activeTab') || 'tags';
+    return localStorage.getItem("activeTab") || "tags";
   });
   const [schemas, setSchemas] = useState<SchemaMap>({});
   const [selectedSchema, setSelectedSchema] = useState(() => {
-    return localStorage.getItem('selectedSchema') || 'default';
+    return localStorage.getItem("selectedSchema") || "default";
   });
 
   // Load schemas from localStorage
   useEffect(() => {
-    const savedSchema = localStorage.getItem('schemas');
+    const savedSchema = localStorage.getItem("schemas");
     if (savedSchema) {
       const parsedSchemas: SchemaMap = JSON.parse(savedSchema);
       setSchemas(parsedSchemas);
-      
+
       // Load the selected schema's blocks
       const currentSchema = parsedSchemas[selectedSchema];
       if (currentSchema) {
         setSKUBlocks(currentSchema.blocks);
         // Update next SKU when schema is loaded
-        const preview = generateNextSKU(currentSchema.blocks, currentSchema.counters);
+        const preview = generateNextSKU(
+          currentSchema.blocks,
+          currentSchema.counters
+        );
         setNextSKU(preview);
         setManualSKU(preview);
       }
@@ -56,97 +60,120 @@ export default function NFCReader() {
     updatedSchemas[selectedSchema] = {
       blocks: skuBlocks,
       counters: schemas[selectedSchema]?.counters || {},
-      description: schemas[selectedSchema]?.description || ''
+      description: schemas[selectedSchema]?.description || "",
     };
 
     setSchemas(updatedSchemas);
-    localStorage.setItem('schemas', JSON.stringify(updatedSchemas));
+    localStorage.setItem("schemas", JSON.stringify(updatedSchemas));
 
     // Update next SKU when blocks change
-    const preview = generateNextSKU(skuBlocks, updatedSchemas[selectedSchema]?.counters || {});
+    const preview = generateNextSKU(
+      skuBlocks,
+      updatedSchemas[selectedSchema]?.counters || {}
+    );
     setNextSKU(preview);
     setManualSKU(preview);
   }, [skuBlocks, selectedSchema]);
 
   // Persist active tab
   useEffect(() => {
-    localStorage.setItem('activeTab', activeTab);
+    localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
   // Persist selected schema
   useEffect(() => {
-    localStorage.setItem('selectedSchema', selectedSchema);
+    localStorage.setItem("selectedSchema", selectedSchema);
   }, [selectedSchema]);
 
   const handleCreateSchema = (name: string, schema: SchemaStorage) => {
     const updatedSchemas = { ...schemas, [name]: schema };
     setSchemas(updatedSchemas);
-    localStorage.setItem('schemas', JSON.stringify(updatedSchemas));
+    localStorage.setItem("schemas", JSON.stringify(updatedSchemas));
     setSelectedSchema(name);
-    setActiveTab('tags');
+    setActiveTab("tags");
   };
 
   const handleSelectSchema = (name: string) => {
     setSelectedSchema(name);
-    setActiveTab('tags');
+    setActiveTab("tags");
   };
 
   // Modified support check
   useEffect(() => {
     const addDebugInfo = (info: string) => {
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: ${info}`]);
+      setDebugInfo((prev) => [...prev, `${new Date().toISOString()}: ${info}`]);
     };
 
-    addDebugInfo(`NDEFReader in window: ${'NDEFReader' in window}`);
+    addDebugInfo(`NDEFReader in window: ${"NDEFReader" in window}`);
     addDebugInfo(`User Agent: ${navigator.userAgent}`);
 
     try {
-      if ('NDEFReader' in window) {
+      if ("NDEFReader" in window) {
         setNfcSupported(true);
-        addDebugInfo('NFC appears to be supported');
+        addDebugInfo("NFC appears to be supported");
       } else {
         setNfcSupported(false);
-        setError('Web NFC not supported in this browser');
-        addDebugInfo('NFC not found in window object');
+        setError("Web NFC not supported in this browser");
+        addDebugInfo("NFC not found in window object");
       }
     } catch (err) {
       setNfcSupported(false);
-      setError(`Error checking NFC support: ${err instanceof Error ? err.message : String(err)}`);
+      setError(
+        `Error checking NFC support: ${err instanceof Error ? err.message : String(err)}`
+      );
       addDebugInfo(`Error during support check: ${String(err)}`);
     }
   }, []);
 
   const handleScanClick = async () => {
     try {
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Attempting to create NDEFReader`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Attempting to create NDEFReader`,
+      ]);
       const reader = new window.NDEFReader();
 
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Attempting to scan`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Attempting to scan`,
+      ]);
       await reader.scan();
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Scan started successfully`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Scan started successfully`,
+      ]);
 
       reader.onreadingerror = (error: Event) => {
-        setError('Error reading NFC tag. Try another tag.');
-        setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Reading error: ${String(error)}`]);
+        setError("Error reading NFC tag. Try another tag.");
+        setDebugInfo((prev) => [
+          ...prev,
+          `${new Date().toISOString()}: Reading error: ${String(error)}`,
+        ]);
       };
 
       reader.onreading = (event: NDEFReadingEvent) => {
-        setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Tag detected`]);
-        const newRecords = event.message.records.map(record => {
+        setDebugInfo((prev) => [
+          ...prev,
+          `${new Date().toISOString()}: Tag detected`,
+        ]);
+        const newRecords = event.message.records.map((record) => {
           return {
             recordType: record.recordType,
             mediaType: record.mediaType,
             data: decodeRecordData(record),
-            id: event.serialNumber
+            id: event.serialNumber,
           };
         });
         setRecords(newRecords);
-        setError('');
+        setError("");
       };
     } catch (err: unknown) {
       const errorMessage = `NFC Error: ${err instanceof Error ? err.message : String(err)}`;
       setError(errorMessage);
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Error: ${errorMessage}`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Error: ${errorMessage}`,
+      ]);
     }
   };
 
@@ -158,66 +185,79 @@ export default function NFCReader() {
   }) => {
     try {
       switch (record.recordType) {
-        case 'text':
+        case "text":
           const textDecoder = new TextDecoder(record.encoding);
           return textDecoder.decode(record.data);
-        case 'url':
+        case "url":
           return new TextDecoder().decode(record.data);
-        case 'mime':
-          if (record.mediaType === 'application/json') {
+        case "mime":
+          if (record.mediaType === "application/json") {
             return JSON.parse(new TextDecoder().decode(record.data));
           }
           return `Binary MIME Data (${record.mediaType})`;
         default:
-          return 'Unsupported format';
+          return "Unsupported format";
       }
     } catch (e) {
-      return 'Error decoding data';
+      return "Error decoding data";
     }
   };
 
   // @ts-expect-error
   const generateCurrentSKU = (): string => {
-    return skuBlocks.map(block => {
-      switch (block.type) {
-        case 'delimiter':
-          return block.value;
-        case 'constant':
-          return block.value;
-        case 'year':
-          return new Date().getFullYear().toString().slice(-(block.length || 4));
-        case 'month':
-          return (new Date().getMonth() + 1).toString().padStart(2, '0');
-        case 'day':
-          return new Date().getDate().toString().padStart(2, '0');
-        case 'counter':
-          return '1'.padStart(block.length || 4, '0');
-        default:
-          return '';
-      }
-    }).join('');
+    return skuBlocks
+      .map((block) => {
+        switch (block.type) {
+          case "delimiter":
+            return block.value;
+          case "constant":
+            return block.value;
+          case "year":
+            return new Date()
+              .getFullYear()
+              .toString()
+              .slice(-(block.length || 4));
+          case "month":
+            return (new Date().getMonth() + 1).toString().padStart(2, "0");
+          case "day":
+            return new Date().getDate().toString().padStart(2, "0");
+          case "counter":
+            return "1".padStart(block.length || 4, "0");
+          default:
+            return "";
+        }
+      })
+      .join("");
   };
 
-  const generateNextSKU = (blocks: SchemaBlock[], counters: Record<string, number>): string => {
-    return blocks.map((block, index) => {
-      switch (block.type) {
-        case 'delimiter':
-          return block.value;
-        case 'constant':
-          return block.value;
-        case 'year':
-          return new Date().getFullYear().toString().slice(-(block.length || 4));
-        case 'month':
-          return (new Date().getMonth() + 1).toString().padStart(2, '0');
-        case 'day':
-          return new Date().getDate().toString().padStart(2, '0');
-        case 'counter':
-          const currentCount = (counters[index] || 0) + 1;
-          return currentCount.toString().padStart(block.length || 4, '0');
-        default:
-          return '';
-      }
-    }).join('');
+  const generateNextSKU = (
+    blocks: SchemaBlock[],
+    counters: Record<string, number>
+  ): string => {
+    return blocks
+      .map((block, index) => {
+        switch (block.type) {
+          case "delimiter":
+            return block.value;
+          case "constant":
+            return block.value;
+          case "year":
+            return new Date()
+              .getFullYear()
+              .toString()
+              .slice(-(block.length || 4));
+          case "month":
+            return (new Date().getMonth() + 1).toString().padStart(2, "0");
+          case "day":
+            return new Date().getDate().toString().padStart(2, "0");
+          case "counter":
+            const currentCount = (counters[index] || 0) + 1;
+            return currentCount.toString().padStart(block.length || 4, "0");
+          default:
+            return "";
+        }
+      })
+      .join("");
   };
 
   const incrementCounters = () => {
@@ -225,7 +265,7 @@ export default function NFCReader() {
     const counters = updatedSchemas[selectedSchema]?.counters || {};
 
     skuBlocks.forEach((block, index) => {
-      if (block.type === 'counter') {
+      if (block.type === "counter") {
         counters[index] = (counters[index] || 0) + 1;
       }
     });
@@ -233,11 +273,11 @@ export default function NFCReader() {
     updatedSchemas[selectedSchema] = {
       ...updatedSchemas[selectedSchema],
       blocks: skuBlocks,
-      counters
+      counters,
     };
 
     setSchemas(updatedSchemas);
-    localStorage.setItem('schemas', JSON.stringify(updatedSchemas));
+    localStorage.setItem("schemas", JSON.stringify(updatedSchemas));
 
     // Update next SKU after incrementing counters
     const preview = generateNextSKU(skuBlocks, counters);
@@ -247,32 +287,46 @@ export default function NFCReader() {
 
   const handleWrite = async () => {
     if (!manualSKU) {
-      setError('Please configure the SKU schema first');
+      setError("Please configure the SKU schema first");
       return;
     }
 
     setIsWriting(true);
     try {
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Attempting to write SKU: ${manualSKU}`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Attempting to write SKU: ${manualSKU}`,
+      ]);
       const writer = new window.NDEFReader();
       await writer.write({
-        records: [{
-          recordType: "text",
-          data: manualSKU
-        }]
+        records: [
+          {
+            recordType: "text",
+            data: manualSKU,
+          },
+        ],
       });
 
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: Write successful`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: Write successful`,
+      ]);
       incrementCounters();
-      const nextPreview = generateNextSKU(skuBlocks, schemas[selectedSchema]?.counters || {});
+      const nextPreview = generateNextSKU(
+        skuBlocks,
+        schemas[selectedSchema]?.counters || {}
+      );
       setNextSKU(nextPreview);
       setManualSKU(nextPreview);
-      setError('');
-      alert('SKU written successfully!');
+      setError("");
+      alert("SKU written successfully!");
     } catch (err: unknown) {
       const errorMessage = `Write Error: ${err instanceof Error ? err.message : String(err)}`;
       setError(errorMessage);
-      setDebugInfo(prev => [...prev, `${new Date().toISOString()}: ${errorMessage}`]);
+      setDebugInfo((prev) => [
+        ...prev,
+        `${new Date().toISOString()}: ${errorMessage}`,
+      ]);
     } finally {
       setIsWriting(false);
     }
@@ -301,8 +355,12 @@ export default function NFCReader() {
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b border-gray-100">
                 <div>
-                  <div className="font-medium text-gray-700">Auto-scan Mode</div>
-                  <div className="text-sm text-gray-500">Automatically start scanning when app opens</div>
+                  <div className="font-medium text-gray-700">
+                    Auto-scan Mode
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Automatically start scanning when app opens
+                  </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" />
@@ -313,34 +371,52 @@ export default function NFCReader() {
               <div className="flex items-center justify-between py-3 border-b border-gray-100">
                 <div>
                   <div className="font-medium text-gray-700">Scan Sound</div>
-                  <div className="text-sm text-gray-500">Play sound when tag is detected</div>
+                  <div className="text-sm text-gray-500">
+                    Play sound when tag is detected
+                  </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
+                  <input
+                    type="checkbox"
+                    defaultChecked
+                    className="sr-only peer"
+                  />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
 
               <div className="flex items-center justify-between py-3 border-b border-gray-100">
                 <div>
-                  <div className="font-medium text-gray-700">Scan History Limit</div>
-                  <div className="text-sm text-gray-500">Maximum number of scans to keep in history</div>
+                  <div className="font-medium text-gray-700">
+                    Scan History Limit
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Maximum number of scans to keep in history
+                  </div>
                 </div>
                 <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
                   <option value="10">10 scans</option>
                   <option value="25">25 scans</option>
-                  <option value="50" selected>50 scans</option>
+                  <option value="50" selected>
+                    50 scans
+                  </option>
                   <option value="100">100 scans</option>
                 </select>
               </div>
 
               <div className="flex items-center justify-between py-3">
                 <div>
-                  <div className="font-medium text-gray-700">Tag Type Filter</div>
-                  <div className="text-sm text-gray-500">Filter which types of tags to detect</div>
+                  <div className="font-medium text-gray-700">
+                    Tag Type Filter
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Filter which types of tags to detect
+                  </div>
                 </div>
                 <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
-                  <option value="all" selected>All Types</option>
+                  <option value="all" selected>
+                    All Types
+                  </option>
                   <option value="ndef">NDEF Only</option>
                   <option value="mifare">MIFARE Only</option>
                 </select>
@@ -366,16 +442,43 @@ export default function NFCReader() {
 
             <div className="space-y-3">
               {[
-                { action: 'Schema Created', details: 'Created new schema "Product Labels v2"', time: '2 minutes ago' },
-                { action: 'Tag Written', details: 'Wrote SKU: PRD-2024-0001', time: '15 minutes ago' },
-                { action: 'Schema Modified', details: 'Updated counter in "Default Schema"', time: '1 hour ago' },
-                { action: 'Tag Scanned', details: 'Read tag with ID: A7B2C3D4', time: '2 hours ago' },
-                { action: 'Settings Changed', details: 'Updated scan preferences', time: '3 hours ago' },
+                {
+                  action: "Schema Created",
+                  details: 'Created new schema "Product Labels v2"',
+                  time: "2 minutes ago",
+                },
+                {
+                  action: "Tag Written",
+                  details: "Wrote SKU: PRD-2024-0001",
+                  time: "15 minutes ago",
+                },
+                {
+                  action: "Schema Modified",
+                  details: 'Updated counter in "Default Schema"',
+                  time: "1 hour ago",
+                },
+                {
+                  action: "Tag Scanned",
+                  details: "Read tag with ID: A7B2C3D4",
+                  time: "2 hours ago",
+                },
+                {
+                  action: "Settings Changed",
+                  details: "Updated scan preferences",
+                  time: "3 hours ago",
+                },
               ].map((log, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                >
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900">{log.action}</div>
-                    <div className="text-sm text-gray-500 mt-0.5">{log.details}</div>
+                    <div className="font-medium text-gray-900">
+                      {log.action}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-0.5">
+                      {log.details}
+                    </div>
                   </div>
                   <div className="text-xs text-gray-400 whitespace-nowrap">
                     {log.time}
@@ -391,7 +494,7 @@ export default function NFCReader() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'schemas':
+      case "schemas":
         return (
           <SchemaManager
             schemas={schemas}
@@ -400,11 +503,11 @@ export default function NFCReader() {
             selectedSchema={selectedSchema}
           />
         );
-      
-      case 'settings':
+
+      case "settings":
         return renderSettings();
-      
-      case 'tags':
+
+      case "tags":
       default:
         return (
           <div className="space-y-4">
@@ -413,16 +516,19 @@ export default function NFCReader() {
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-800">SKU Builder</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Schema: <span className="font-medium">{selectedSchema}</span>
+                    <h2 className="font-semibold text-gray-800 text-xl">
+                      SKU Builder
+                    </h2>
+                    <p className="text-gray-500 mt-1 text-lg">
+                      Schema:{" "}
+                      <span className="font-medium">{selectedSchema}</span>
                     </p>
                   </div>
                 </div>
                 <div className="overflow-x-auto -mx-4 px-4">
                   <div className="min-w-full">
-                    <SKUBuilder 
-                      onChange={setSKUBlocks} 
+                    <SKUBuilder
+                      onChange={setSKUBlocks}
                       blocks={schemas[selectedSchema]?.blocks || []}
                     />
                   </div>
@@ -435,7 +541,9 @@ export default function NFCReader() {
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Preview
+                    </h2>
                     <p className="text-sm text-gray-500 mt-1">
                       See how your SKU will look
                     </p>
@@ -452,7 +560,9 @@ export default function NFCReader() {
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-800">Next SKU</h2>
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Next SKU
+                    </h2>
                     <p className="text-sm text-gray-500 mt-1">
                       Edit to override the next SKU to be written
                     </p>
@@ -478,7 +588,7 @@ export default function NFCReader() {
                           active:bg-blue-700 hover:bg-blue-500 transition-colors
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                {nfcSupported ? 'Scan NFC Tag' : 'NFC Not Supported'}
+                {nfcSupported ? "Scan NFC Tag" : "NFC Not Supported"}
               </button>
 
               <button
@@ -489,7 +599,7 @@ export default function NFCReader() {
                           active:bg-green-700 hover:bg-green-500 transition-colors
                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                {isWriting ? 'Writing...' : 'Write SKU to Tag'}
+                {isWriting ? "Writing..." : "Write SKU to Tag"}
               </button>
             </section>
 
@@ -499,7 +609,9 @@ export default function NFCReader() {
                 <div className="p-4">
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-800">Recent Scans</h2>
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        Recent Scans
+                      </h2>
                       <p className="text-sm text-gray-500 mt-1">
                         Previously scanned NFC tags
                       </p>
@@ -507,10 +619,22 @@ export default function NFCReader() {
                   </div>
                   <ul className="space-y-3">
                     {records.map((record, index) => (
-                      <li key={index} className="p-3 bg-gray-50 rounded-lg space-y-1.5 text-sm">
-                        <div><span className="font-medium">Type:</span> {record.recordType}</div>
-                        <div className="break-all"><span className="font-medium">Data:</span> {JSON.stringify(record.data)}</div>
-                        <div className="font-mono"><span className="font-medium">Tag ID:</span> {record.id}</div>
+                      <li
+                        key={index}
+                        className="p-3 bg-gray-50 rounded-lg space-y-1.5 text-sm"
+                      >
+                        <div>
+                          <span className="font-medium">Type:</span>{" "}
+                          {record.recordType}
+                        </div>
+                        <div className="break-all">
+                          <span className="font-medium">Data:</span>{" "}
+                          {JSON.stringify(record.data)}
+                        </div>
+                        <div className="font-mono">
+                          <span className="font-medium">Tag ID:</span>{" "}
+                          {record.id}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -523,19 +647,16 @@ export default function NFCReader() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 font-darkerGrotesque">
       {/* Header */}
-      <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
-        <div className="px-4 py-3 max-w-lg mx-auto">
-          <h1 className="text-xl font-semibold text-gray-800">NFC Tag Manager</h1>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 pb-24 px-4 max-w-lg mx-auto w-full">
+      <main className="flex-1 max-w-lg mx-auto w-full">
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg">
-            {error}
+          <div className="flex items-center gap-4 text-red-500 py-8 text-xl">
+            <div className="w-[5px] h-[5px] rounded-full bg-red-500"></div>
+            <p className="-mt-1">{error}</p>
           </div>
         )}
 
@@ -553,9 +674,9 @@ export default function NFCReader() {
                     <button
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full py-3 px-2 flex flex-col items-center justify-center
-                                ${activeTab === item.id ? 'text-blue-600' : 'text-gray-600'}
+                                ${activeTab === item.id ? "text-blue-600" : "text-gray-600"}
                                 transition-colors rounded-2xl
-                                ${activeTab === item.id ? 'bg-white shadow-sm' : ''}`}
+                                ${activeTab === item.id ? "bg-white shadow-sm" : ""}`}
                     >
                       <span className="text-2xl mb-1">{item.icon}</span>
                       <span className="text-xs font-medium">{item.label}</span>

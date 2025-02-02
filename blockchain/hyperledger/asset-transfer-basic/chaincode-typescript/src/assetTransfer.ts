@@ -19,6 +19,7 @@ export class AssetTransferContract extends Contract {
                 Size: 5,
                 Owner: 'Tomoko',
                 AppraisedValue: 300,
+                docType: 'asset'
             },
             {
                 ID: 'asset2',
@@ -26,6 +27,7 @@ export class AssetTransferContract extends Contract {
                 Size: 5,
                 Owner: 'Brad',
                 AppraisedValue: 400,
+                docType: 'asset'
             },
             {
                 ID: 'asset3',
@@ -33,6 +35,7 @@ export class AssetTransferContract extends Contract {
                 Size: 10,
                 Owner: 'Jin Soo',
                 AppraisedValue: 500,
+                docType: 'asset'
             },
             {
                 ID: 'asset4',
@@ -40,6 +43,7 @@ export class AssetTransferContract extends Contract {
                 Size: 10,
                 Owner: 'Max',
                 AppraisedValue: 600,
+                docType: 'asset'
             },
             {
                 ID: 'asset5',
@@ -47,6 +51,7 @@ export class AssetTransferContract extends Contract {
                 Size: 15,
                 Owner: 'Adriana',
                 AppraisedValue: 700,
+                docType: 'asset'
             },
             {
                 ID: 'asset6',
@@ -54,6 +59,7 @@ export class AssetTransferContract extends Contract {
                 Size: 15,
                 Owner: 'Michel',
                 AppraisedValue: 800,
+                docType: 'asset'
             },
         ];
 
@@ -168,70 +174,6 @@ export class AssetTransferContract extends Contract {
             result = await iterator.next();
         }
         return JSON.stringify(allResults);
-    }
-
-    @Transaction(false)
-    @Returns('string')
-    public async GetAssetHistory(ctx: Context, id: string): Promise<string> {
-        const resultsIterator = await ctx.stub.getHistoryForKey(id);
-        const results = [];
-        let res = await resultsIterator.next();
-        while (!res.done) {
-            const tx = res.value;
-            const record = {
-                txId: tx.txId,
-                value: tx.value.toString(),
-                timestamp: tx.timestamp,
-                isDelete: tx.isDelete,
-            };
-            results.push(record);
-            res = await resultsIterator.next();
-        }
-        return JSON.stringify(results);
-    }
-
-        // GetAssetHash returns a SHA256 hash of the asset's JSON.
-        @Transaction(false)
-        @Returns('string')
-        public async GetAssetHash(ctx: Context, id: string): Promise<string> {
-            const assetBytes = await ctx.stub.getState(id);
-            if (assetBytes.length === 0) {
-                throw new Error(`The asset ${id} does not exist`);
-            }
-            const assetStr = assetBytes.toString();
-            // Use Node's crypto module to compute SHA256 hash.
-            const crypto = require('crypto');
-            return crypto.createHash('sha256').update(assetStr).digest('hex');
-        }
-    
-
-    @Transaction(false)
-    @Returns('boolean')
-    public async VerifyAsset(ctx: Context, id: string, color: string, size: number, owner: string, appraisedValue: number): Promise<boolean> {
-        const assetString = await this.ReadAsset(ctx, id);
-        const asset = JSON.parse(assetString) as Asset;
-        return asset.Color === color && asset.Size === size && asset.Owner === owner && asset.AppraisedValue === appraisedValue;
-    }
-
-    @Transaction(false)
-    @Returns('string')
-    public async GetAssetByRange(ctx: Context, startKey: string, endKey: string): Promise<string> {
-        const results = [];
-        const iterator = await ctx.stub.getStateByRange(startKey, endKey);
-        let result = await iterator.next();
-        while (!result.done) {
-            const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
-            let record;
-            try {
-                record = JSON.parse(strValue) as Asset;
-            } catch (err) {
-                console.log(err);
-                record = strValue;
-            }
-            results.push(record);
-            result = await iterator.next();
-        }
-        return JSON.stringify(results);
     }
 
 }
